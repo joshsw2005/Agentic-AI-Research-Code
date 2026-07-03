@@ -4,15 +4,101 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 
-def run_semgrep(repo_path: str, config: str = "auto") -> Dict[str, Any]:
-    cmd = [
-        "semgrep",
-        "scan",
-        "--config",
-        config,
-        "--json",
-        repo_path,
-    ]
+def _find_rule_dirs(rule_root: str) -> List[str]:
+    """
+    Return all top-level rule directories that contain at least one
+    valid Semgrep rule. Skip metadata directories like .github, stats,
+    and scripts automatically.
+    """
+    root = Path(rule_root)
+    configs = []
+
+    for d in root.iterdir():
+        if not d.is_dir():
+            continue
+
+        # Skip known non-rule directories
+        if d.name in {"stats", "scripts", ".github"}:
+            continue
+
+        # Check whether this directory contains at least one rule file
+        valid = False
+        for ext in ("*.yml", "*.yaml"):
+            for rule in d.rglob(ext):
+                try:
+                    text = rule.read_text(encoding="utf-8", errors="ignore")
+                    if text.lstrip().startswith("rules:"):
+                        valid = True
+                        break
+                except Exception:
+                    pass
+
+            if valid:
+                break
+
+        if valid:
+            configs.append(str(d))
+
+    return configs
+
+
+def run_semgrep(
+    repo_path: str,
+    config: str = "/opt/agentic-vuln-ai/semgrep-rules-develop",
+) -> Dict[str, Any]:
+
+    rule_dirs = _find_rule_dirs(config)
+
+    if not rule_dirs:
+        raise RuntimeError(f"No valid Semgrep rule directories found in {config}")
+
+    cmd = ["semgrep", "scan"]
+
+    for cfg in rule_dirs:
+        cmd.extend(["--config", cfg])
+
+    cmd.extend(["--json", repo_path])
+
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+    if result.returncode not in (0, 1):
+        raise RuntimeError(
+            "Semgrep failed.\n"
+            f"STDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
+        )
+
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"Failed to parse Semgrep JSON output: {result.stdout[:1000]}") from exc
+
+
+def run_semgrep_multi(
+    file_paths: List[str],
+    config: str = "/opt/agentic-vuln-ai/semgrep-rules-develop",
+) -> Dict[str, Any]:
+    """
+    Same as run_semgrep(), but scans multiple files in a single Semgrep
+    invocation. Rule loading/startup only happens once instead of once
+    per file — this is the dominant cost when verifying many patched
+    files individually, since each subprocess call re-parses the full
+    ruleset from scratch before scanning even a single small file.
+    """
+    rule_dirs = _find_rule_dirs(config)
+
+    if not rule_dirs:
+        raise RuntimeError(f"No valid Semgrep rule directories found in {config}")
+
+    if not file_paths:
+        return {"results": []}
+
+    cmd = ["semgrep", "scan"]
+
+    for cfg in rule_dirs:
+        cmd.extend(["--config", cfg])
+
+    cmd.extend(["--json", *file_paths])
+
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
     if result.returncode not in (0, 1):
