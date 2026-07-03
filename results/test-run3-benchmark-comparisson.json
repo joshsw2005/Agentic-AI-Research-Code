@@ -1,0 +1,394 @@
+{
+    "matched_any_benchmark_files": true,
+    "comparisons": [
+      {
+        "filename": "README.json",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "auth_001.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "c_buffer_001.c",
+        "in_benchmark_key": true,
+        "test_id": 13,
+        "cwe": "CWE-120",
+        "vulnerability_type": "Buffer Overflow",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": true
+      },
+      {
+        "filename": "c_format_001.c",
+        "in_benchmark_key": true,
+        "test_id": 17,
+        "cwe": "CWE-134",
+        "vulnerability_type": "Format String",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "c_int_overflow_001.c",
+        "in_benchmark_key": true,
+        "test_id": 15,
+        "cwe": "CWE-190",
+        "vulnerability_type": "Integer Overflow",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "c_memleak_001.c",
+        "in_benchmark_key": true,
+        "test_id": 16,
+        "cwe": "CWE-401",
+        "vulnerability_type": "Memory Leak",
+        "detected": false,
+        "patch_applied": false,
+        "patch_success": false,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "c_null_ptr_001.c",
+        "in_benchmark_key": true,
+        "test_id": 14,
+        "cwe": "CWE-476",
+        "vulnerability_type": "Null Pointer Dereference",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "c_off_by_one_001.c",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "c_race_001.c",
+        "in_benchmark_key": true,
+        "test_id": 19,
+        "cwe": "CWE-362",
+        "vulnerability_type": "Race Condition",
+        "detected": true,
+        "patch_applied": false,
+        "patch_success": false,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "c_use_after_free_001.c",
+        "in_benchmark_key": true,
+        "test_id": 18,
+        "cwe": "CWE-416",
+        "vulnerability_type": "Use After Free",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "cmd_001.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "cmd_002.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "crypto_001.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "crypto_002.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "java_crypto_001.java",
+        "in_benchmark_key": true,
+        "test_id": 24,
+        "cwe": "CWE-327",
+        "vulnerability_type": "Weak Cryptography",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "java_deserialize_001.java",
+        "in_benchmark_key": true,
+        "test_id": 22,
+        "cwe": "CWE-502",
+        "vulnerability_type": "Insecure Deserialization",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "java_path_001.java",
+        "in_benchmark_key": true,
+        "test_id": 23,
+        "cwe": "CWE-22",
+        "vulnerability_type": "Path Traversal",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "java_sqli_001.java",
+        "in_benchmark_key": true,
+        "test_id": 20,
+        "cwe": "CWE-89",
+        "vulnerability_type": "SQL Injection",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "java_xss_001.java",
+        "in_benchmark_key": true,
+        "test_id": 21,
+        "cwe": "CWE-79",
+        "vulnerability_type": "Cross-Site Scripting",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "java_xxe_001.java",
+        "in_benchmark_key": true,
+        "test_id": 25,
+        "cwe": "CWE-611",
+        "vulnerability_type": "XML Bomb / Billion Laughs",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "js_command_001.js",
+        "in_benchmark_key": true,
+        "test_id": 28,
+        "cwe": "CWE-78",
+        "vulnerability_type": "Command Injection",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "js_prototype_001.js",
+        "in_benchmark_key": true,
+        "test_id": 27,
+        "cwe": "CWE-1321",
+        "vulnerability_type": "Prototype Pollution",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "js_secrets_001.js",
+        "in_benchmark_key": true,
+        "test_id": 30,
+        "cwe": "CWE-798",
+        "vulnerability_type": "Hardcoded Secrets",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "js_xss_001.js",
+        "in_benchmark_key": true,
+        "test_id": 26,
+        "cwe": "CWE-79",
+        "vulnerability_type": "Cross-Site Scripting (DOM)",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": false,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "path_001.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "py_cmd_001.py",
+        "in_benchmark_key": true,
+        "test_id": 3,
+        "cwe": "CWE-78",
+        "vulnerability_type": "OS Command Injection",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_crypto_001.py",
+        "in_benchmark_key": true,
+        "test_id": 5,
+        "cwe": "CWE-327",
+        "vulnerability_type": "Weak Cryptographic Hash",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_header_injection_001.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "py_ldap_001.py",
+        "in_benchmark_key": true,
+        "test_id": 12,
+        "cwe": "CWE-90",
+        "vulnerability_type": "LDAP Injection",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_path_001.py",
+        "in_benchmark_key": true,
+        "test_id": 4,
+        "cwe": "CWE-22",
+        "vulnerability_type": "Path Traversal",
+        "detected": true,
+        "patch_applied": false,
+        "patch_success": false,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_pickle_001.py",
+        "in_benchmark_key": true,
+        "test_id": 6,
+        "cwe": "CWE-502",
+        "vulnerability_type": "Insecure Deserialization",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_redirect_001.py",
+        "in_benchmark_key": true,
+        "test_id": 9,
+        "cwe": "CWE-601",
+        "vulnerability_type": "Open Redirect",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": false,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_sqli_001.py",
+        "in_benchmark_key": true,
+        "test_id": 2,
+        "cwe": "CWE-89",
+        "vulnerability_type": "SQL Injection",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_ssrf_001.py",
+        "in_benchmark_key": true,
+        "test_id": 7,
+        "cwe": "CWE-918",
+        "vulnerability_type": "Server-Side Request Forgery",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": false,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_timing_001.py",
+        "in_benchmark_key": true,
+        "test_id": 11,
+        "cwe": "CWE-208",
+        "vulnerability_type": "Timing Attack (Authentication)",
+        "detected": true,
+        "patch_applied": false,
+        "patch_success": false,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_upload_001.py",
+        "in_benchmark_key": true,
+        "test_id": 10,
+        "cwe": "CWE-434",
+        "vulnerability_type": "Unrestricted File Upload",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_xss_001.py",
+        "in_benchmark_key": true,
+        "test_id": 1,
+        "cwe": "CWE-79",
+        "vulnerability_type": "Cross-Site Scripting (XSS)",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": false,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "py_xxe_001.py",
+        "in_benchmark_key": true,
+        "test_id": 8,
+        "cwe": "CWE-611",
+        "vulnerability_type": "XML External Entity Injection",
+        "detected": true,
+        "patch_applied": true,
+        "patch_success": true,
+        "patch_flagged_name_match_only": false
+      },
+      {
+        "filename": "sqli_001.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "sqli_002.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "upload_001.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "xss_001.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      },
+      {
+        "filename": "xss_002.py",
+        "in_benchmark_key": false,
+        "note": "No matching entry in BENCHMARK_KEY.json -- not scored."
+      }
+    ]
+  }

@@ -1,0 +1,253 @@
+jwijesinghe@hnode:~/agentic-vuln-ai/container$ srun --pty --gpus=1 -p gpus -w thor apptainer run --nv --bind ~/agentic-vuln-ai/results:/tmp /home/students/jwijesinghe/agentic-vuln-ai/container/agentic-vuln-ai-amd64.sif --repo /opt/agentic-vuln-ai/my_vulnerable_code --output /tmp/report.json --patched-dir /tmp/patched
+[+] Starting Ollama server...
+[+] Waiting for Ollama to become ready...
+[+] Ollama is ready.
+[+] Waiting for model to stabilize...
+[+] Running pipeline: python3 main.py --repo /opt/agentic-vuln-ai/my_vulnerable_code --output /tmp/report.json --patched-dir /tmp/patched
+[+] Running Semgrep on: /opt/agentic-vuln-ai/my_vulnerable_code
+[+] Using Semgrep config: /opt/agentic-vuln-ai/semgrep-rules-develop
+[+] Semgrep found 40 result(s)
+[+] Running independent LLM detector
+[+] LLM detector scanning 1/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/auth_001.py
+[+] LLM detector scanning 2/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/c_buffer_001.c
+[+] LLM detector scanning 3/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/c_format_001.c
+[+] LLM detector scanning 4/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/c_int_overflow_001.c
+[+] LLM detector scanning 5/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/c_memleak_001.c
+[+] LLM detector scanning 6/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/c_null_ptr_001.c
+[+] LLM detector scanning 7/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/c_off_by_one_001.c
+[+] LLM detector scanning 8/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/c_race_001.c
+[+] LLM detector scanning 9/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/c_use_after_free_001.c
+[+] LLM detector scanning 10/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/cmd_001.py
+[+] LLM detector scanning 11/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/cmd_002.py
+[+] LLM detector scanning 12/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/crypto_001.py
+[+] LLM detector scanning 13/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/crypto_002.py
+[+] LLM detector scanning 14/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/java_crypto_001.java
+[+] LLM detector scanning 15/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/java_deserialize_001.java
+[+] LLM detector scanning 16/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/java_path_001.java
+[+] LLM detector scanning 17/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/java_sqli_001.java
+[+] LLM detector scanning 18/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/java_xss_001.java
+[+] LLM detector scanning 19/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/java_xxe_001.java
+[+] LLM detector scanning 20/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/js_command_001.js
+[+] LLM detector scanning 21/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/js_prototype_001.js
+[+] LLM detector scanning 22/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/js_secrets_001.js
+[+] LLM detector scanning 23/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/js_xss_001.js
+[+] LLM detector scanning 24/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/path_001.py
+[+] LLM detector scanning 25/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_cmd_001.py
+[+] LLM detector scanning 26/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_crypto_001.py
+[+] LLM detector scanning 27/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_header_injection_001.py
+[+] LLM detector scanning 28/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_ldap_001.py
+[+] LLM detector scanning 29/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_path_001.py
+[+] LLM detector scanning 30/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_pickle_001.py
+[+] LLM detector scanning 31/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_redirect_001.py
+[+] LLM detector scanning 32/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_sqli_001.py
+[+] LLM detector scanning 33/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_ssrf_001.py
+[+] LLM detector scanning 34/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_timing_001.py
+[+] LLM detector scanning 35/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_upload_001.py
+[+] LLM detector scanning 36/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_xss_001.py
+[+] LLM detector scanning 37/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/py_xxe_001.py
+[+] LLM detector scanning 38/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/sqli_001.py
+[+] LLM detector scanning 39/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/sqli_002.py
+[+] LLM detector scanning 40/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/upload_001.py
+[+] LLM detector scanning 41/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/xss_001.py
+[+] LLM detector scanning 42/42: /opt/agentic-vuln-ai/my_vulnerable_code/my_vulnerable_code/xss_002.py
+[+] LLM detector found 40 result(s)
+[+] Combined findings: 37 (after merging overlaps)
+[+] Analyzing 37 findings (3 parallel workers)
+[+] Analyzing finding 1/37: semgrep-rules-develop.c.lang.security.insecure-use-string-copy-fn
+[+] Analyzing finding 2/37: semgrep-rules-develop.c.lang.security.insecure-use-printf-fn
+[+] Analyzing finding 3/37: semgrep-rules-develop.c.lang.security.use-after-free
+[+] Analyzing finding 4/37: semgrep-rules-develop.python.lang.security.audit.dangerous-system-call-audit
+[+] Analyzing finding 5/37: semgrep-rules-develop.python.lang.security.insecure-hash-algorithm-md5
+[+] Analyzing finding 6/37: semgrep-rules-develop.java.lang.security.audit.crypto.use-of-md5
+[+] Analyzing finding 7/37: semgrep-rules-develop.java.lang.security.audit.object-deserialization
+[+] Analyzing finding 8/37: semgrep-rules-develop.java.spring.security.injection.tainted-file-path
+[+] Analyzing finding 9/37: semgrep-rules-develop.java.lang.security.audit.formatted-sql-string
+[+] Analyzing finding 10/37: semgrep-rules-develop.java.lang.security.audit.xxe.documentbuilderfactory-disallow-doctype-decl-missing
+[+] Analyzing finding 11/37: semgrep-rules-develop.javascript.lang.security.detect-child-process
+[+] Analyzing finding 12/37: semgrep-rules-develop.generic.secrets.gitleaks.generic-api-key
+[+] Analyzing finding 13/37: semgrep-rules-develop.javascript.express.security.audit.xss.direct-response-write
+[+] Analyzing finding 14/37: semgrep-rules-develop.python.lang.best-practice.unspecified-open-encoding
+[+] Analyzing finding 15/37: semgrep-rules-develop.python.lang.security.audit.dangerous-system-call-audit
+[+] Analyzing finding 16/37: semgrep-rules-develop.python.lang.security.insecure-hash-algorithm-md5
+[+] Analyzing finding 17/37: semgrep-rules-develop.python.lang.best-practice.unspecified-open-encoding
+[+] Analyzing finding 18/37: semgrep-rules-develop.python.flask.security.insecure-deserialization
+[+] Analyzing finding 19/37: semgrep-rules-develop.python.flask.security.open-redirect
+[+] Analyzing finding 20/37: semgrep-rules-develop.python.lang.security.audit.formatted-sql-query
+[+] Analyzing finding 21/37: semgrep-rules-develop.python.django.security.injection.ssrf.ssrf-injection-requests
+[+] Analyzing finding 22/37: semgrep-rules-develop.python.flask.security.audit.directly-returned-format-string
+[+] Analyzing finding 23/37: semgrep-rules-develop.python.lang.security.audit.formatted-sql-query
+[+] Analyzing finding 24/37: semgrep-rules-develop.python.flask.security.audit.directly-returned-format-string
+[+] Analyzing finding 25/37: llm-detector.timing-attack
+[+] Analyzing finding 26/37: llm-detector.integer-overflow
+[+] Analyzing finding 27/37: llm-detector.null-pointer-dereference
+[+] Analyzing finding 28/37: llm-detector.race-condition
+[+] Analyzing finding 29/37: llm-detector.insecure-cryptographic-algorithm
+[+] Analyzing finding 30/37: llm-detector.cross-site-scripting
+[+] Analyzing finding 31/37: llm-detector.prototype-pollution
+[+] Analyzing finding 32/37: llm-detector.header-injection
+[+] Analyzing finding 33/37: llm-detector.ldap-injection
+[+] Analyzing finding 34/37: llm-detector.insecure-direct-object-reference
+[+] Analyzing finding 35/37: llm-detector.insecure-file-upload
+[+] Analyzing finding 36/37: llm-detector.xml-external-entity-injection
+[+] Analyzing finding 37/37: llm-detector.arbitrary-file-write
+[+] Writing patched copy to: /tmp/patched/my_vulnerable_code
+[+] Re-running detection on patched files (Semgrep always; LLM only on regressions / prone categories / sample)
+[+] LLM-verified 8/33 patched files (rest confirmed by Semgrep only)
+[+] Report written to: /tmp/report.json
+[+] Comparing report against benchmark key...
+
+============================================================
+BENCHMARK COMPARISON
+============================================================
+
+README.json: not in benchmark key, skipped.
+
+auth_001.py: not in benchmark key, skipped.
+
+c_buffer_001.c  (test #13, CWE-120)
+  Detected:      ✓
+  Patch success: ✓ (re-flagged by name-match-only rule, not a real failure)
+
+c_format_001.c  (test #17, CWE-134)
+  Detected:      ✓
+  Patch success: ✓
+
+c_int_overflow_001.c  (test #15, CWE-190)
+  Detected:      ✓
+  Patch success: ✓
+
+c_memleak_001.c  (test #16, CWE-401)
+  Detected:      ✗
+  Patch success: n/a (no patch applied)
+
+c_null_ptr_001.c  (test #14, CWE-476)
+  Detected:      ✓
+  Patch success: ✓
+
+c_off_by_one_001.c: not in benchmark key, skipped.
+
+c_race_001.c  (test #19, CWE-362)
+  Detected:      ✓
+  Patch success: n/a (no patch applied)
+
+c_use_after_free_001.c  (test #18, CWE-416)
+  Detected:      ✓
+  Patch success: ✓
+
+cmd_001.py: not in benchmark key, skipped.
+
+cmd_002.py: not in benchmark key, skipped.
+
+crypto_001.py: not in benchmark key, skipped.
+
+crypto_002.py: not in benchmark key, skipped.
+
+java_crypto_001.java  (test #24, CWE-327)
+  Detected:      ✓
+  Patch success: ✓
+
+java_deserialize_001.java  (test #22, CWE-502)
+  Detected:      ✓
+  Patch success: ✓
+
+java_path_001.java  (test #23, CWE-22)
+  Detected:      ✓
+  Patch success: ✓
+
+java_sqli_001.java  (test #20, CWE-89)
+  Detected:      ✓
+  Patch success: ✓
+
+java_xss_001.java  (test #21, CWE-79)
+  Detected:      ✓
+  Patch success: ✓
+
+java_xxe_001.java  (test #25, CWE-611)
+  Detected:      ✓
+  Patch success: ✓
+
+js_command_001.js  (test #28, CWE-78)
+  Detected:      ✓
+  Patch success: ✓
+
+js_prototype_001.js  (test #27, CWE-1321)
+  Detected:      ✓
+  Patch success: ✓
+
+js_secrets_001.js  (test #30, CWE-798)
+  Detected:      ✓
+  Patch success: ✓
+
+js_xss_001.js  (test #26, CWE-79)
+  Detected:      ✓
+  Patch success: ✗
+
+path_001.py: not in benchmark key, skipped.
+
+py_cmd_001.py  (test #3, CWE-78)
+  Detected:      ✓
+  Patch success: ✓
+
+py_crypto_001.py  (test #5, CWE-327)
+  Detected:      ✓
+  Patch success: ✓
+
+py_header_injection_001.py: not in benchmark key, skipped.
+
+py_ldap_001.py  (test #12, CWE-90)
+  Detected:      ✓
+  Patch success: ✓
+
+py_path_001.py  (test #4, CWE-22)
+  Detected:      ✓
+  Patch success: n/a (no patch applied)
+
+py_pickle_001.py  (test #6, CWE-502)
+  Detected:      ✓
+  Patch success: ✓
+
+py_redirect_001.py  (test #9, CWE-601)
+  Detected:      ✓
+  Patch success: ✗
+
+py_sqli_001.py  (test #2, CWE-89)
+  Detected:      ✓
+  Patch success: ✓
+
+py_ssrf_001.py  (test #7, CWE-918)
+  Detected:      ✓
+  Patch success: ✗
+
+py_timing_001.py  (test #11, CWE-208)
+  Detected:      ✓
+  Patch success: n/a (no patch applied)
+
+py_upload_001.py  (test #10, CWE-434)
+  Detected:      ✓
+  Patch success: ✓
+
+py_xss_001.py  (test #1, CWE-79)
+  Detected:      ✓
+  Patch success: ✗
+
+py_xxe_001.py  (test #8, CWE-611)
+  Detected:      ✓
+  Patch success: ✓
+
+sqli_001.py: not in benchmark key, skipped.
+
+sqli_002.py: not in benchmark key, skipped.
+
+upload_001.py: not in benchmark key, skipped.
+
+xss_001.py: not in benchmark key, skipped.
+
+xss_002.py: not in benchmark key, skipped.
+
+------------------------------------------------------------
+Detection: 28/29
+Patch success: 21/25
+------------------------------------------------------------
+
+[compare] Comparison saved to: /tmp/benchmark_comparison.json
+[+] Shutting down Ollama...
