@@ -1,0 +1,231 @@
+Bootstrap: docker
+From: nvidia/cuda:{{ CUDA_VERSION }}-runtime-ubuntu22.04
+Stage: build
+
+%arguments
+    CUDA_VERSION=12.4.1
+
+%labels
+    Author joshuawijesinghe
+    Project agentic-vuln-ai
+    Model qwen3-coder:30b
+
+%help
+    Container for the agentic-vuln-ai pipeline (Semgrep + LLM detector +
+    combine + patch + verification), serving Qwen3-Coder 30B locally via
+    Ollama on a CUDA GPU node (e.g. Thor: 2x NVIDIA A30).
+
+    Model weights ARE baked into this image (~33GB total) to enable offline
+    operation on the HPC cluster (no internet access at runtime).
+
+    Semgrep rules (p/security-audit) are cached during build to enable
+    offline operation on the HPC cluster (no internet access).
+
+    Build (on your login node with internet access):
+        apptainer build agentic-vuln-ai.sif agentic-vuln-ai.def
+    
+    Note: Build requires internet access (to pull the 30GB model and cache Semgrep rules).
+    Build time: 30-60 minutes depending on network.
+
+    Run on the cluster (see accompanying run script for the full workflow):
+        apptainer instance start --nv \
+            agentic-vuln-ai.sif ollama-server
+
+%post
+    set -e
+
+    apt-get update
+    apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        python3-venv \
+        curl \
+        ca-certificates \
+        git \
+        build-essential \
+        zstd
+
+        update-ca-certificates
+
+        # Create RHEL-compatible certificate paths for Semgrep
+        mkdir -p /etc/pki/ca-trust/extracted/pem
+        ln -sf /etc/ssl/certs/ca-certificates.crt /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
+
+    # Install Ollama. Its installer detects the CUDA runtime already
+    # present in this base image and configures GPU support accordingly.
+    curl -fsSL https://ollama.com/install.sh | sh
+
+    # Upgrade pip first -- the base images bundled pip is old enough that
+    # some flags/behaviors differ from what youd see on a modern desktop
+    # Python install.
+    python3 -m pip install --no-cache-dir --upgrade pip
+
+    # Project Python dependencies. Installed system-wide inside the
+    # container (containers dont need their own venv-within-venv).
+    python3 -m pip install --no-cache-dir \
+        requests>=2.31.0 \
+        semgrep>=1.75.0
+
+    mkdir -p /opt/agentic-vuln-ai
+    mkdir -p /ollama-models
+    mkdir -p /opt/agentic-vuln-ai/my_vulnerable_code
+    mkdir -p /opt/agentic-vuln-ai/semgrep-rules-develop
+
+    # Flatten nested semgrep-rules-develop directory structure
+    if [ -d /opt/agentic-vuln-ai/semgrep-rules-develop/semgrep-rules-develop ]; then
+       cd /opt/agentic-vuln-ai/semgrep-rules-develop
+       mv semgrep-rules-develop/* .
+       rm -rf semgrep-rules-develop
+    fi
+
+    # Flatten nested benchmark directory structure (same issue as semgrep-rules-develop)
+    if [ -d /opt/agentic-vuln-ai/benchmark/benchmark ]; then
+       cd /opt/agentic-vuln-ai/benchmark
+       mv benchmark/* .
+       rmdir benchmark
+    fi
+    
+    # Pre-download the model during build so it's baked into the .sif file.
+    # This requires the build environment to have internet access.
+    # The model is ~30GB, so the final .sif will be large (~33GB).
+    echo "[*] Starting Ollama server for model download..."
+    export OLLAMA_MODELS=/ollama-models
+    ollama serve > /tmp/ollama.log 2>&1 &
+    OLLAMA_PID=$!
+    
+    echo "[*] Waiting for Ollama server to be ready..."
+    for i in $(seq 1 60); do
+        if curl -sf http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
+            echo "[*] Ollama server is ready. Starting model download..."
+            break
+        fi
+        sleep 2
+    done
+    
+    echo "[*] Pre-pulling qwen3-coder:30b model (this may take 10-30 minutes)..."
+    ollama pull qwen3-coder:30b
+    
+    echo "[*] Stopping Ollama server..."
+    kill $OLLAMA_PID 2>/dev/null || true
+    wait $OLLAMA_PID 2>/dev/null || true
+    
+    # Pre-cache Semgrep security-audit rules so they work offline at runtime.
+    # This requires internet during build but enables completely offline scanning.
+    #echo "[*] Caching Semgrep security-audit ruleset..."
+    #semgrep --config=p/security-audit --help >/dev/null 2>&1 || true
+    
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+
+%files
+    main.py /opt/agentic-vuln-ai/main.py
+    llm_client.py /opt/agentic-vuln-ai/llm_client.py
+    llm_detector.py /opt/agentic-vuln-ai/llm_detector.py
+    combine_findings.py /opt/agentic-vuln-ai/combine_findings.py
+    patcher.py /opt/agentic-vuln-ai/patcher.py
+    prompts.py /opt/agentic-vuln-ai/prompts.py
+    semgrep_runner.py /opt/agentic-vuln-ai/semgrep_runner.py
+    benchmark/ /opt/agentic-vuln-ai/benchmark/
+    my_vulnerable_code/ /opt/agentic-vuln-ai/my_vulnerable_code/
+    semgrep-rules-develop/ /opt/agentic-vuln-ai/semgrep-rules-develop/
+
+%environment
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+    # Model weights are now baked into the container, no need to bind-mount
+    export OLLAMA_MODELS=/ollama-models
+    # Listen on all interfaces so the API is reachable from outside the
+    # container (e.g. from your main.py process, whether it runs inside
+    # the same container instance or a separate one on the same node).
+    export OLLAMA_HOST=0.0.0.0:11434
+    export LLM_API_URL=http://127.0.0.1:11434/api/chat
+    export LLM_MODEL=qwen3-coder:30b
+    export LLM_API_KEY=not-needed
+    export LLM_RESPONSE_FORMAT_MODE=text
+    export LLM_NUM_CTX=8192
+    export LLM_MAX_TOKENS=4096
+    export LLM_TIMEOUT_SECONDS=180
+    export SEMGREP_USER_CONFIG_FILE=/tmp/semgrep-config.json
+
+%startscript
+    # Used with `apptainer instance start --nv ...`. Runs the Ollama
+    # server as a long-lived background service for the instance.
+    exec ollama serve
+
+%runscript
+    # Used with `apptainer run --nv ...`. One-shot: starts Ollama in the
+    # background, waits for it to be ready, then runs either the normal
+    # pipeline (default) or the benchmark evaluation (--benchmark flag).
+    # After a normal run, automatically compares the report against
+    # BENCHMARK_KEY.json if one is present and the scanned file(s) match
+    # an entry in it. --repo is also passed to the comparison so files
+    # that were scanned but produced zero findings are still counted as
+    # false negatives instead of silently disappearing from the results.
+    set -e
+
+    echo "[+] Starting Ollama server..."
+    ollama serve > /tmp/ollama.log 2>&1 &
+    OLLAMA_PID=$!
+
+    echo "[+] Waiting for Ollama to become ready..."
+
+    READY=0
+    for i in $(seq 1 60); do
+        if curl -sf http://127.0.0.1:11434/api/tags >/dev/null 2>&1; then
+            echo "[+] Ollama is ready."
+            READY=1
+            break
+        fi
+        sleep 2
+    done
+
+    if [ "$READY" -ne 1 ]; then
+        echo "[-] Ollama failed to start. Dumping logs:"
+        cat /tmp/ollama.log
+        exit 1
+    fi
+
+    echo "[+] Waiting for model to stabilize..."
+    sleep 10
+
+    cd /opt/agentic-vuln-ai
+
+    if [ "$1" = "--benchmark" ]; then
+        shift
+        echo "[+] Running benchmark evaluation: python3 benchmark/benchmark_key_eval.py $*"
+        python3 benchmark/benchmark_key_eval.py "$@"
+    else
+        echo "[+] Running pipeline: python3 main.py $*"
+        python3 main.py "$@"
+
+        # Auto-compare against the benchmark key if one is present.
+        # Extract --output and --repo from the args just passed (POSIX sh
+        # compatible -- no arrays, no C-style for loops).
+        OUTPUT_PATH=""
+        REPO_PATH=""
+        PREV=""
+        for arg in "$@"; do
+            if [ "$PREV" = "--output" ]; then
+                OUTPUT_PATH="$arg"
+            fi
+            if [ "$PREV" = "--repo" ]; then
+                REPO_PATH="$arg"
+            fi
+            PREV="$arg"
+        done
+
+        if [ -n "$OUTPUT_PATH" ] && [ -f /opt/agentic-vuln-ai/benchmark/BENCHMARK_KEY.json ]; then
+            echo "[+] Comparing report against benchmark key..."
+            python3 benchmark/compare_report.py --report "$OUTPUT_PATH" --repo "$REPO_PATH"
+        fi
+    fi
+
+    echo "[+] Shutting down Ollama..."
+    kill $OLLAMA_PID 2>/dev/null || true
+    wait $OLLAMA_PID 2>/dev/null || true
+
+%test
+    python3 --version
+    ollama --version
+    semgrep --version
+    echo "Container self-test passed."
