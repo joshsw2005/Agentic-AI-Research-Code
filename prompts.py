@@ -224,7 +224,8 @@ business-logic flaws, authentication/authorization gaps, insecure design
 decisions, improper trust boundaries, and issues that require understanding
 intent rather than pattern-matching.
 
-Do not limit yourself to a fixed checklist. Use your judgement.
+Do not limit yourself to a fixed checklist. Use your judgement. Also be on
+the lookout for memory leaks (allocated resources that are never released).
 
 Return JSON only with this exact schema:
 
@@ -354,6 +355,10 @@ Rules:
 - Output ONLY the complete corrected source file. No explanation, no JSON,
   no markdown fences, no preamble, no commentary — raw {lang} source only.
 - Preserve all original functionality that is not itself a security risk.
+- Preserve the original function's error-handling behavior exactly — do not
+  introduce new exceptions, crashes, or process termination on failure paths
+  that the original code handled gracefully (e.g. don't add check=True to a
+  subprocess call if the original returned an error code instead of raising).
 - Minimise unnecessary changes beyond what is required to fix each vulnerability.
 - If a vulnerability cannot be safely fixed without breaking functionality,
   add a TODO comment at the relevant line explaining why and what is needed.
@@ -367,4 +372,53 @@ Findings:
 Original File:
 
 {original_code}
+""".strip()
+
+
+def build_verify_prompt(file_path: str, source_code: str, original_finding: dict) -> str:
+    """
+    Post-patch verification prompt. Unlike build_detection_prompt (which
+    hunts for ANY issue), this asks a narrow yes/no question about ONE
+    specific, previously-identified vulnerability -- and requires a quoted
+    line as evidence, so the model can't report a finding it can't point to.
+
+    This exists specifically to stop verifier hallucination: asking a model
+    "find issues" on a small, already-patched file invites it to invent one
+    to comply. Asking "is THIS exact prior issue still here, and where" gives
+    it nothing to invent from.
+    """
+    lang = _detect_language(file_path)
+    return f"""
+You are verifying whether a SPECIFIC previously-identified vulnerability has
+been fixed in the {lang} file below. Do not search for new or unrelated
+issues -- only answer about the one vulnerability described here.
+
+Original vulnerability:
+Type: {original_finding.get('vulnerability_type', '')}
+CWE: {original_finding.get('cwe', '')}
+Description: {original_finding.get('message', '')}
+
+Return JSON only with this exact schema:
+
+{{
+  "still_vulnerable": true,
+  "quoted_line": "",
+  "explanation": ""
+}}
+
+Rules:
+- still_vulnerable must be true only if you can quote an exact line from the
+  code below that reproduces the original vulnerability.
+- quoted_line must be an exact, verbatim substring of the code below. If
+  still_vulnerable is false, leave quoted_line as an empty string.
+- If you cannot find a literal line supporting the vulnerability, you MUST
+  set still_vulnerable to false. Do not infer, assume, or speculate about
+  code that is not shown.
+- Return valid JSON only. No markdown.
+
+File Path: {file_path}
+
+Source Code:
+
+{source_code}
 """.strip()
