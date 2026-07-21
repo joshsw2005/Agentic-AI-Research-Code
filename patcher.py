@@ -79,6 +79,27 @@ def _call_patch_code(messages: list) -> str:
     return "\n".join(lines).strip()
 
 
+def _is_meaningfully_unchanged(original: str, patched: str) -> bool:
+    """
+    Detect when the model returned the original code (or a trivial
+    whitespace/comment variant of it) despite metadata claiming a fix.
+
+    This guards against cases like java_deserialize_001, where the metadata
+    call reports a fix (changes, patch_rationale, etc.) but the code call
+    returns source that is functionally identical to the original -- no
+    actual patch was applied, just relabeled.
+    """
+    def normalize(code: str) -> str:
+        lines = [ln.strip() for ln in code.splitlines()]
+        lines = [
+            ln for ln in lines
+            if ln and not ln.startswith(("#", "//", "/*", "*"))
+        ]
+        return "\n".join(lines)
+
+    return normalize(original) == normalize(patched)
+
+
 def apply_patches(
     scan_target: Path, patched_target: Path, analyzed_findings: List[Dict]
 ) -> List[Dict]:
@@ -147,6 +168,19 @@ def apply_patches(
             metadata.setdefault("remaining_risk", "")
             metadata["remaining_risk"] = (
                 f"Code generation failed ({exc}). "
+                + (metadata.get("remaining_risk") or "")
+            ).strip()
+
+        # ------------------------------------------------------------------ #
+        # Guard — reject "patches" that are identical to the original code.  #
+        # Catches cases where metadata claims a fix but no code actually     #
+        # changed (e.g. java_deserialize_001).                                #
+        # ------------------------------------------------------------------ #
+        if patched_code and _is_meaningfully_unchanged(original_code, patched_code):
+            patched_code = ""
+            metadata["remaining_risk"] = (
+                "Patch generation returned code identical (or trivially "
+                "identical) to the original; no actual fix was applied. "
                 + (metadata.get("remaining_risk") or "")
             ).strip()
 
