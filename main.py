@@ -9,7 +9,7 @@ from typing import Dict, List
 
 from combine_findings import combine_findings
 from llm_client import chat_completion
-from llm_detector import run_llm_detector, detect_file
+from llm_detector import run_llm_detector, detect_file, verify_finding
 from patcher import apply_patches, create_patched_copy
 from prompts import build_analysis_prompt
 from semgrep_runner import run_semgrep, run_semgrep_multi, simplify_findings
@@ -85,6 +85,21 @@ def _finding_key(finding: Dict) -> tuple:
     return (finding.get("rule_id"), finding.get("start_line"), finding.get("end_line"))
 
 
+def _to_verify_finding_dict(pre_finding: Dict) -> Dict:
+    """
+    Shape a pre-patch finding (semgrep-style dict, possibly with an
+    'llm_analysis' sub-dict from the initial analysis pass) into the flat
+    dict build_verify_prompt expects: vulnerability_type, cwe, message.
+    """
+    llm_analysis = pre_finding.get("llm_analysis", {}) or {}
+    return {
+        "vulnerability_type": llm_analysis.get("vulnerability_type")
+            or pre_finding.get("rule_id", ""),
+        "cwe": llm_analysis.get("cwe", ""),
+        "message": llm_analysis.get("explanation") or pre_finding.get("message", ""),
+    }
+
+
 def verify_patches(
     patched_target: Path,
     patch_results: List[Dict],
@@ -98,11 +113,18 @@ def verify_patches(
     Hybrid verification:
       - Semgrep always runs on every patched file (cheap, catches regressions
         against the full ruleset, not just the original finding).
-      - LLM detector only runs on a file when:
+      - LLM verification only runs on a file when:
           (a) Semgrep found a NEW finding on that file post-patch (possible
               regression — confirm/expand with the LLM), OR
           (b) the original finding's category is known LLM-prone, OR
           (c) the file is hit by random sampling (llm_sample_rate).
+
+    LLM verification is TARGETED, not generic: for each pre-patch finding on
+    a selected file, verify_finding() asks "is THIS specific vulnerability
+    still present" and requires a verbatim quoted line as evidence. This
+    replaces the previous approach of calling detect_file() (the generic
+    "find anything wrong" detector) on patched files, which could hallucinate
+    new findings on code that had already been fixed.
     """
     pre_patch_findings = pre_patch_findings or []
     applied_files = [r["file"] for r in patch_results if r.get("applied")]
@@ -175,18 +197,52 @@ def verify_patches(
     if llm_detector_max_files:
         llm_targets = llm_targets[:llm_detector_max_files]
 
+    # For each targeted file, verify EACH of its original pre-patch findings
+    # individually (targeted, groundable check) instead of running the
+    # generic detector against the whole file.
+    llm_verify_jobs = []  # list of (file_path, pre_finding)
+    for file_path in llm_targets:
+        file_key = _norm(file_path)
+        for pre_finding in pre_by_file.get(file_key, []):
+            llm_verify_jobs.append((file_path, pre_finding))
+
     llm_findings: List[Dict] = []
-    if llm_targets:
-        def _verify_file(fp):
-            return detect_file(Path(fp), min_confidence=0.85)
+    if llm_verify_jobs:
+        def _verify_job(job):
+            file_path, pre_finding = job
+            result = verify_finding(Path(file_path), _to_verify_finding_dict(pre_finding))
+            return file_path, pre_finding, result
 
         with ThreadPoolExecutor(max_workers=workers) as pool:
-            futures = [pool.submit(_verify_file, fp) for fp in llm_targets]
+            futures = [pool.submit(_verify_job, job) for job in llm_verify_jobs]
             for future in as_completed(futures):
                 try:
-                    llm_findings.extend(future.result())
+                    file_path, pre_finding, result = future.result()
                 except Exception as exc:
                     print(f"[!] LLM verify failed: {exc}")
+                    continue
+
+                if not result.get("still_vulnerable"):
+                    continue
+
+                # Shape a still-vulnerable confirmation as a finding, in the
+                # same shape combine_findings()/report expect. Reuses the
+                # pre-patch finding's identity (rule_id, lines) since it's
+                # the SAME vulnerability, now confirmed to still be present.
+                llm_findings.append({
+                    "rule_id": pre_finding.get("rule_id", "llm-verifier.unknown"),
+                    "message": result.get("explanation", ""),
+                    "severity": pre_finding.get("severity", "Unknown"),
+                    "path": str(Path(file_path).resolve()),
+                    "start_line": pre_finding.get("start_line", 0),
+                    "end_line": pre_finding.get("end_line", 0),
+                    "code": result.get("quoted_line", ""),
+                    "source": "llm_verifier",
+                    "llm_verifier_metadata": {
+                        "quoted_line": result.get("quoted_line", ""),
+                        "explanation": result.get("explanation", ""),
+                    },
+                })
 
     semgrep_findings = all_post_findings
     remaining = combine_findings(semgrep_findings, llm_findings)
@@ -310,7 +366,8 @@ def main() -> None:
         patch_results = apply_patches(repo_path, patched_target_path, analyzed)
 
         print("[+] Re-running detection on patched files "
-              "(Semgrep always; LLM only on regressions / prone categories / sample)")
+              "(Semgrep always; targeted LLM verification only on "
+              "regressions / prone categories / sample)")
         verification = verify_patches(
             patched_target_path,
             patch_results,
