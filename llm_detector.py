@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from llm_client import call_llm
-from prompts import build_detection_prompt
+from prompts import build_detection_prompt, build_verify_prompt
 
 # Source file extensions worth sending to the LLM detector.
 SCANNABLE_EXTENSIONS = {
@@ -124,6 +124,69 @@ def detect_file(path: Path, min_confidence: float = 0.0) -> List[Dict[str, Any]]
         })
 
     return findings
+
+
+def verify_finding(path: Path, original_finding: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Check whether ONE specific pre-patch finding still applies to a patched
+    file. Unlike detect_file (which hunts for any issue and can hallucinate
+    one to comply), this can only confirm or deny the ONE issue it's given,
+    and any "still vulnerable" claim must be backed by a verbatim quote from
+    the file -- if the quote doesn't actually appear in the file, the claim
+    is rejected outright rather than trusted.
+
+    original_finding should carry at least: vulnerability_type, cwe, message
+    (the same shape as an llm_analysis dict / detect_file finding).
+    """
+    try:
+        source_code = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return {"still_vulnerable": False, "quoted_line": "", "explanation": "file not found"}
+
+    prompt = build_verify_prompt(str(path), _number_lines(source_code), original_finding)
+
+    try:
+        response = call_llm(
+            [
+                {"role": "system", "content": "You are a precise application security assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            expect_json=True,
+        )
+    except RuntimeError as exc:
+        print(f"[!] LLM verify failed on {path}: {exc}")
+        return {"still_vulnerable": False, "quoted_line": "", "explanation": f"verify call failed: {exc}"}
+
+    if not isinstance(response, dict):
+        return {"still_vulnerable": False, "quoted_line": "", "explanation": "malformed response"}
+
+    quoted = response.get("quoted_line", "") or ""
+    still_vuln = bool(response.get("still_vulnerable", False))
+
+    # Grounding check: reject the claim outright if the "quoted" line isn't
+    # actually present in the file. This is what stops hallucinated findings
+    # (e.g. a verifier claiming a fixed format-string bug is still present)
+    # from reaching the report.
+    if still_vuln and quoted.strip() and quoted.strip() not in source_code:
+        still_vuln = False
+        response["explanation"] = (
+            "Rejected: quoted_line did not match file content verbatim "
+            "(likely hallucinated). " + response.get("explanation", "")
+        )
+    elif still_vuln and not quoted.strip():
+        # No quote at all but claims still vulnerable -- can't be trusted
+        # per the prompt's own rules, so reject defensively.
+        still_vuln = False
+        response["explanation"] = (
+            "Rejected: still_vulnerable=true but no quoted_line was provided. "
+            + response.get("explanation", "")
+        )
+
+    return {
+        "still_vulnerable": still_vuln,
+        "quoted_line": quoted,
+        "explanation": response.get("explanation", ""),
+    }
 
 
 def run_llm_detector(
